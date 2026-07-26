@@ -48,6 +48,37 @@ WORDPRESS_CLIENT_ID="144537"
 
 ---
 
+## 🔑 시크릿 (인증 정보) 발급 및 확인 방법
+
+WordPress.com REST API 연동에 필요한 정보들을 발급받는 방법입니다.
+
+### 1. Client ID 및 Client Secret 발급
+1. [WordPress.com Developer Applications](https://developer.wordpress.com/apps/) 관리 페이지에 접속합니다.
+2. **Create New Application** 버튼을 클릭합니다.
+3. 앱 이름, 설명, **Redirect URL** (예: `http://localhost`)을 작성 후 앱을 등록합니다.
+4. 앱이 생성되면 부여된 **Client ID**를 확인합니다.
+
+### 2. Access Token (액세스 토큰) 발급
+* **OAuth2 인증 절차**:
+  1. 웹 브라우저에서 인증 URL에 접속하여 응답 코드를 획득합니다:
+     ```text
+     https://public-api.wordpress.com/oauth2/authorize?client_id=<YOUR_CLIENT_ID>&redirect_uri=<YOUR_REDIRECT_URI>&response_type=code
+     ```
+  2. 사용자 승인 후 리다이렉트된 URL의 `code=` 파라미터 값을 복사합니다.
+  3. `https://public-api.wordpress.com/oauth2/token` 주소로 `POST` 요청을 보낸 후 `access_token`을 발급받습니다.
+* **개발자 콘솔 / 테스트 용도**:
+  * [WordPress.com Developer Console](https://developer.wordpress.com/docs/api/console/) 또는 API 테스트 도구(Postman 등)에서 OAuth2 인증을 진행하여 테스트용 `access_token`을 빠르게 발급받을 수 있습니다.
+
+### 3. Site ID 확인 방법
+* **API 호출로 확인**: `access_token` 발급 후 다음 curl 명령어로 본인의 블로그 ID를 조회할 수 있습니다:
+  ```bash
+  curl -H "Authorization: Bearer <YOUR_ACCESS_TOKEN>" https://public-api.wordpress.com/rest/v1.1/me/sites
+  ```
+  응답 결과 JSON의 `ID` 항목(예: `165329412`)을 확인합니다.
+* **도메인 사용**: WordPress.com REST API는 숫자 `SITE_ID` 외에도 `steelcup.home.blog`와 같은 도메인 주소를 사이트 식별자로 사용할 수 있습니다.
+
+---
+
 ## 🚀 사용법
 
 ### CLI 유틸리티 사용 (직접 실행)
