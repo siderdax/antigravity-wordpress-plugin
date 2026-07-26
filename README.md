@@ -16,18 +16,24 @@ antigravity-wordpress-plugin/
 
 ## 🛠️ 설치 및 설정 방법 (Antigravity CLI)
 
-### 1. 전역 플러그인 경로 복사
-개발 폴더의 수정 및 삭제 영향 없이 독립적으로 동작하도록 Antigravity CLI 전역 플러그인 디렉터리에 복사합니다:
+### 방법 A. GitHub URL로 직접 설치 (가장 간편한 방법)
+Antigravity CLI는 Git 리포지토리 URL을 통해 직접 원격 플러그인을 설치하는 기능을 지원합니다:
 
 ```bash
-mkdir -p ~/.gemini/antigravity-cli/plugins/wordpress-plugin
-rsync -av ~/Projects/antigravity-wordpress-plugin/ ~/.gemini/antigravity-cli/plugins/wordpress-plugin/
+agy plugin install https://github.com/siderdax/antigravity-wordpress-plugin
 ```
 
-### 2. Antigravity CLI 플러그인 등록
-`agy plugin install` 명령어로 복사된 플러그인을 Antigravity CLI에 등록합니다:
+---
+
+### 방법 B. 로컬 전역 플러그인 경로 복사 후 설치
+개발 폴더의 수정 및 삭제 영향 없이 독립적으로 동작하도록 Antigravity CLI 전역 플러그인 디렉터리에 복사하여 설치하는 방법입니다:
 
 ```bash
+# 1. 전역 디렉터리로 복사
+mkdir -p ~/.gemini/antigravity-cli/plugins/wordpress-plugin
+rsync -av ~/Projects/antigravity-wordpress-plugin/ ~/.gemini/antigravity-cli/plugins/wordpress-plugin/
+
+# 2. Antigravity CLI 플러그인 등록
 agy plugin install ~/.gemini/antigravity-cli/plugins/wordpress-plugin
 ```
 
@@ -35,6 +41,8 @@ agy plugin install ~/.gemini/antigravity-cli/plugins/wordpress-plugin
 ```bash
 agy plugin list
 ```
+
+---
 
 ### 3. 환경 변수 (인증 정보) 설정
 `~/.gemini/antigravity-cli/.env` 또는 `~/.gemini/antigravity-cli/plugins/wordpress-plugin/.env` 파일에 WordPress API 인증 정보를 설정합니다:
