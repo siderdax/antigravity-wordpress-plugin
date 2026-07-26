@@ -48,15 +48,26 @@ WORDPRESS_CLIENT_ID="144537"
 
 ---
 
-## 🔑 시크릿 (인증 정보) 발급 및 확인 방법
+## 🔑 시크릿 (인증 정보) 발급 및 확인 상세 가이드
 
 WordPress.com REST API 연동에 필요한 정보들을 발급받는 방법입니다.
 
 ### 1. Client ID 및 Client Secret 발급
 1. [WordPress.com Developer Applications](https://developer.wordpress.com/apps/) 관리 페이지에 접속합니다.
-2. **Create New Application** 버튼을 클릭합니다.
-3. 앱 이름, 설명, **Redirect URL** (예: `http://localhost`)을 작성 후 앱을 등록합니다.
-4. 앱이 생성되면 부여된 **Client ID**를 확인합니다.
+2. **Create New Application** (새 애플리케이션 생성) 버튼을 클릭합니다.
+3. 애플리케이션 등록 양식을 아래 가이드에 맞춰 작성합니다:
+
+| 필드명 | 설명 및 추천 입력값 |
+| :--- | :--- |
+| **Name** | 애플리케이션 이름 (예: `Antigravity WordPress Plugin`) |
+| **Description** | 애플리케이션 설명 |
+| **URL (Website URL)** | 필수 입력 항목. 본인의 WordPress.com 블로그 주소 (예: `https://steelcup.home.blog`) 또는 프로젝트 웹사이트 주소를 입력합니다. |
+| **Redirect URL** | 필수 입력 항목. OAuth 인증 성공 후 인증 코드를 전달받을 주소입니다. CLI 스크립트나 로컬 개발 시 `http://localhost` 또는 `http://127.0.0.1`을 입력합니다. |
+| **Type (Application Type)** | **Web** 선택 (권장)<br>- **Web**: Python CLI 스크립트/서버 유틸리티처럼 `Client Secret`을 로컬 환경 변수(`.env`)로 안전하게 보관 가능한 경우 선택합니다.<br>- **Native**: 모바일 앱(iOS/Android)이나 커스텀 URL 스킴(예: `myapp://callback`)을 사용하는 앱에서 선택합니다. |
+
+4. 작성 완료 후 앱을 등록하면 **Client ID** 및 **Client Secret**이 생성됩니다.
+
+---
 
 ### 2. Access Token (액세스 토큰) 발급
 * **OAuth2 인증 절차**:
@@ -65,9 +76,11 @@ WordPress.com REST API 연동에 필요한 정보들을 발급받는 방법입�
      https://public-api.wordpress.com/oauth2/authorize?client_id=<YOUR_CLIENT_ID>&redirect_uri=<YOUR_REDIRECT_URI>&response_type=code
      ```
   2. 사용자 승인 후 리다이렉트된 URL의 `code=` 파라미터 값을 복사합니다.
-  3. `https://public-api.wordpress.com/oauth2/token` 주소로 `POST` 요청을 보낸 후 `access_token`을 발급받습니다.
+  3. `https://public-api.wordpress.com/oauth2/token` 주소로 `POST` 요청을 보내 `access_token`을 발급받습니다.
 * **개발자 콘솔 / 테스트 용도**:
   * [WordPress.com Developer Console](https://developer.wordpress.com/docs/api/console/) 또는 API 테스트 도구(Postman 등)에서 OAuth2 인증을 진행하여 테스트용 `access_token`을 빠르게 발급받을 수 있습니다.
+
+---
 
 ### 3. Site ID 확인 방법
 * **API 호출로 확인**: `access_token` 발급 후 다음 curl 명령어로 본인의 블로그 ID를 조회할 수 있습니다:
