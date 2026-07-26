@@ -1,0 +1,9 @@
+{
+  "name": "wordpress-plugin",
+  "version": "1.0.0",
+  "description": "Antigravity plugin for WordPress.com REST API management & automation",
+  "author": "kyi",
+  "skills": [
+    "wordpress-management"
+  ]
+}
