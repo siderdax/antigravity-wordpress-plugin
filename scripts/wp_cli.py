@@ -10,6 +10,12 @@ import argparse
 import json
 import urllib.parse
 import urllib.request
+import ssl
+try:
+    import certifi
+    SSL_CONTEXT = ssl.create_default_context(cafile=certifi.where())
+except Exception:
+    SSL_CONTEXT = ssl.create_default_context()
 
 def load_env():
     """
@@ -78,7 +84,7 @@ def api_request(endpoint, method='GET', data=None, params=None):
 
     req = urllib.request.Request(url, data=body, headers=headers, method=method)
     try:
-        with urllib.request.urlopen(req) as response:
+        with urllib.request.urlopen(req, context=SSL_CONTEXT) as response:
             res_body = response.read().decode('utf-8')
             return json.loads(res_body)
     except urllib.error.HTTPError as e:
@@ -182,9 +188,88 @@ def cmd_categories_list(args):
     for c in sorted(cats, key=lambda x: x['name']):
         print(f"Name: {c['name']:25s} | Slug: {c['slug']:20s} | Posts: {c['post_count']}")
 
+def cmd_token(args):
+    client_id = os.environ.get('WORDPRESS_CLIENT_ID') or env.get('WORDPRESS_CLIENT_ID')
+    client_secret = os.environ.get('WORDPRESS_CLIENT_SECRET') or env.get('WORDPRESS_CLIENT_SECRET')
+    redirect_uri = os.environ.get('WORDPRESS_REDIRECT_URI') or env.get('WORDPRESS_REDIRECT_URI', 'https://steelcup.home.blog/')
+    
+    if not client_id or not client_secret:
+        print("Error: WORDPRESS_CLIENT_ID or WORDPRESS_CLIENT_SECRET is missing.")
+        sys.exit(1)
+        
+    url = "https://public-api.wordpress.com/oauth2/token"
+    payload = {
+        'client_id': client_id,
+        'client_secret': client_secret,
+        'redirect_uri': redirect_uri,
+        'grant_type': 'authorization_code',
+        'code': args.code
+    }
+    headers = {
+        'Content-Type': 'application/x-www-form-urlencoded; charset=utf-8',
+        'User-Agent': 'Antigravity-WP-Plugin/1.0'
+    }
+    body = urllib.parse.urlencode(payload).encode('utf-8')
+    req = urllib.request.Request(url, data=body, headers=headers, method='POST')
+    try:
+        with urllib.request.urlopen(req, context=SSL_CONTEXT) as response:
+            res_body = response.read().decode('utf-8')
+            data = json.loads(res_body)
+            new_token = data.get('access_token')
+            if not new_token:
+                print(f"Error: No access_token returned: {data}")
+                sys.exit(1)
+            print(f"Successfully obtained new access token!")
+            print(f"Site ID / Blog ID: {data.get('blog_id')}")
+            print(f"Blog URL: {data.get('blog_url')}")
+            
+            # Update .env files
+            env_paths = [
+                os.path.expanduser('~/.hermes/.env'),
+                os.path.expanduser('~/.gemini/config/.env'),
+                os.path.expanduser('~/.gemini/antigravity-cli/.env'),
+                os.path.abspath('.env')
+            ]
+            updated_any = False
+            for p in env_paths:
+                if os.path.exists(p):
+                    with open(p, 'r', encoding='utf-8') as f:
+                        lines = f.readlines()
+                    token_found = False
+                    new_lines = []
+                    for line in lines:
+                        if line.startswith('WORDPRESS_ACCESS_TOKEN='):
+                            new_lines.append(f'WORDPRESS_ACCESS_TOKEN="{new_token}"\n')
+                            token_found = True
+                        else:
+                            new_lines.append(line)
+                    if not token_found:
+                        new_lines.append(f'WORDPRESS_ACCESS_TOKEN="{new_token}"\n')
+                    with open(p, 'w', encoding='utf-8') as f:
+                        f.writelines(new_lines)
+                    print(f"Updated token in: {p}")
+                    updated_any = True
+            if not updated_any:
+                hermes_env = os.path.expanduser('~/.hermes/.env')
+                with open(hermes_env, 'a', encoding='utf-8') as f:
+                    f.write(f'\nWORDPRESS_ACCESS_TOKEN="{new_token}"\n')
+                print(f"Saved token to: {hermes_env}")
+    except urllib.error.HTTPError as e:
+        err_msg = e.read().decode('utf-8', errors='ignore')
+        print(f"HTTP Error {e.code}: {err_msg}")
+        sys.exit(1)
+    except Exception as e:
+        print(f"Request Error: {e}")
+        sys.exit(1)
+
 def main():
     parser = argparse.ArgumentParser(description="WordPress.com REST API CLI for Antigravity")
     subparsers = parser.add_subparsers(dest='command', help='Commands')
+
+    # Token
+    p_token = subparsers.add_parser('token', help='Exchange authorization code for access token')
+    p_token.add_argument('--code', required=True, help='Authorization code from OAuth redirect')
+    p_token.set_defaults(func=cmd_token)
 
     # Posts
     p_posts = subparsers.add_parser('posts', help='Manage posts')
