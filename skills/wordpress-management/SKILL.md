@@ -79,3 +79,40 @@ python3 ~/Projects/antigravity-wordpress-plugin/scripts/wp_cli.py tags cleanup
 * `Infra & DevOps`: Docker, Grafana, 모니터링, 데브옵스
 * `Embedded & Hardware`: 임베디드, ROS, MQTT, 하드웨어
 * `Review & Tips`: 소프트웨어/기기 리뷰, 생산성 팁
+
+---
+
+## 4. OAuth2 토큰 갱신 절차 (`HTTP 400: invalid_token` 발생 시)
+
+1. **사용자 승인 링크 제공**:
+   - URL: `https://public-api.wordpress.com/oauth2/authorize?client_id=144537&redirect_uri=https://steelcup.home.blog/&response_type=code`
+   - 사용자에게 승인 후 이동한 주소(`https://steelcup.home.blog/?code=<code>`) 전달 요청
+
+2. **Access Token 교환**:
+   - `POST https://public-api.wordpress.com/oauth2/token`
+   - Data: `client_id=144537`, `client_secret=...`, `redirect_uri=https://steelcup.home.blog/`, `grant_type=authorization_code`, `code=<code>`
+
+3. **.env 파일 업데이트**:
+   - `C:\Users\USER\Projects\antigravity-wordpress-plugin\.env` 및 `C:\Users\USER\.gemini\config\plugins\wordpress-plugin\.env` 내 `WORDPRESS_ACCESS_TOKEN` 신규 토큰으로 갱신
+
+---
+
+## 5. 포스팅 작성 문체 및 서식 규칙 (필수 준수)
+
+1. **이모지 사용 금지**:
+   - 포스트 제목, 본문, 소제목 전체에서 이모지(😀, 🚀, 📌, ⚠️ 등)를 절대 사용하지 않는다.
+
+2. **결론, 요약, 정리 및 교훈 섹션 작성 금지**:
+   - 포스팅 끝 또는 본문에 "결론", "요약", "마무리", "총평", "정리", "교훈" 등의 별도 세션을 작성하지 않는다.
+
+3. **기본 문체 (본문 전체)**:
+   - 일반 본문 설명 문장은 `~다` 어미로 끝낸다 (`~한다`, `~다`, `~가 있다`).
+
+4. **부연 설명 문장 명사 종결 규칙**:
+   - **하위 내용(코드, 목록 항목 등)을 설명하거나 상단 이미지/코드를 설명하는 짧은 부연 설명 문장만** 반드시 **명사**로 종결한다.
+   - **예시 구분**:
+     - *일반 본문 설명 문장*: `리눅스에서 이전 디렉터리로 이동할 때는 cd 명령어를 사용한다.`
+     - *하위/이미지/코드 부연 설명 문장*: `하단 코드 내용은 데이터를 클리어하는 코드.` / `상위 경로로 이동하기 위한 커맨드.` / `역방향 대화형 검색을 실행하는 단축키.`
+
+
+

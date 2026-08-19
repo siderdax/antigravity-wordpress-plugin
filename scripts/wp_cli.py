@@ -123,9 +123,15 @@ def cmd_posts_get(args):
     print(p.get('content', ''))
 
 def cmd_posts_create(args):
+    content = ""
+    if getattr(args, 'content_file', None) and os.path.exists(args.content_file):
+        with open(args.content_file, 'r', encoding='utf-8') as f:
+            content = f.read()
+    elif args.content:
+        content = args.content
     data = {
         'title': args.title,
-        'content': args.content,
+        'content': content,
         'status': args.status
     }
     if args.tags:
@@ -142,7 +148,10 @@ def cmd_posts_create(args):
 def cmd_posts_update(args):
     data = {}
     if args.title: data['title'] = args.title
-    if args.content: data['content'] = args.content
+    if getattr(args, 'content_file', None) and os.path.exists(args.content_file):
+        with open(args.content_file, 'r', encoding='utf-8') as f:
+            data['content'] = f.read()
+    elif args.content: data['content'] = args.content
     if args.status: data['status'] = args.status
     if args.tags is not None: data['tags'] = args.tags
     if args.categories is not None: data['categories'] = args.categories
@@ -182,6 +191,37 @@ def cmd_categories_list(args):
     for c in sorted(cats, key=lambda x: x['name']):
         print(f"Name: {c['name']:25s} | Slug: {c['slug']:20s} | Posts: {c['post_count']}")
 
+def cmd_themes_get(args):
+    t = api_request('/themes/mine')
+    print(f"Current Active Theme:")
+    print(f"  ID: {t.get('id')}")
+    print(f"  Name: {t.get('name')}")
+    print(f"  Version: {t.get('version')}")
+    print(f"  Author: {t.get('author')}")
+
+def cmd_themes_list(args):
+    res = api_request('/themes', params={'number': 30})
+    themes = res.get('themes', [])
+    print(f"Total Themes Found: {len(themes)}")
+    print("-" * 60)
+    if isinstance(themes, dict):
+        for k, v in list(themes.items())[:20]:
+            name = v.get('name') if isinstance(v, dict) else v
+            print(f"ID: {k:30s} | Name: {name}")
+    elif isinstance(themes, list):
+        for t in themes[:20]:
+            if isinstance(t, dict):
+                print(f"ID: {t.get('id', ''):30s} | Name: {t.get('name')}")
+            else:
+                print(f"Theme Slug: {t}")
+
+def cmd_themes_set(args):
+    data = {'theme': args.theme}
+    t = api_request('/themes/mine', method='POST', data=data)
+    print(f"Successfully activated theme '{args.theme}'!")
+    print(f"  Active Theme Name: {t.get('name')}")
+    print(f"  Theme ID: {t.get('id')}")
+
 def main():
     parser = argparse.ArgumentParser(description="WordPress.com REST API CLI for Antigravity")
     subparsers = parser.add_subparsers(dest='command', help='Commands')
@@ -201,7 +241,8 @@ def main():
 
     p_create = p_posts_sub.add_parser('create', help='Create new post')
     p_create.add_argument('--title', required=True, help='Post title')
-    p_create.add_argument('--content', required=True, help='Post content (HTML or Text)')
+    p_create.add_argument('--content', help='Post content (HTML or Text)')
+    p_create.add_argument('--content-file', help='Path to content file (HTML or Text)')
     p_create.add_argument('--status', default='publish', choices=['publish', 'draft', 'private'], help='Post status')
     p_create.add_argument('--tags', help='Comma separated tags')
     p_create.add_argument('--categories', help='Comma separated categories')
@@ -211,6 +252,7 @@ def main():
     p_update.add_argument('post_id', type=int, help='Post ID')
     p_update.add_argument('--title', help='Post title')
     p_update.add_argument('--content', help='Post content')
+    p_update.add_argument('--content-file', help='Path to content file (HTML or Text)')
     p_update.add_argument('--status', choices=['publish', 'draft', 'private'], help='Post status')
     p_update.add_argument('--tags', help='Comma separated tags')
     p_update.add_argument('--categories', help='Comma separated categories')
@@ -236,6 +278,20 @@ def main():
 
     p_clist = p_cats_sub.add_parser('list', help='List categories')
     p_clist.set_defaults(func=cmd_categories_list)
+
+    # Themes
+    p_themes = subparsers.add_parser('themes', help='Manage themes')
+    p_themes_sub = p_themes.add_subparsers(dest='subcommand')
+
+    p_thget = p_themes_sub.add_parser('get', help='Get current active theme')
+    p_thget.set_defaults(func=cmd_themes_get)
+
+    p_thlist = p_themes_sub.add_parser('list', help='List themes')
+    p_thlist.set_defaults(func=cmd_themes_list)
+
+    p_thset = p_themes_sub.add_parser('set', help='Set/Activate theme')
+    p_thset.add_argument('theme', type=str, help='Theme slug (e.g., twentytwentyfour)')
+    p_thset.set_defaults(func=cmd_themes_set)
 
     args = parser.parse_args()
     if hasattr(args, 'func'):
