@@ -12,7 +12,20 @@ description: "WordPress.com REST API management skill for Antigravity Agent usin
 ## 1. 전용 Python CLI 실행 스크립트 위치
 
 * **CLI 경로**: `~/Projects/antigravity-wordpress-plugin/scripts/wp_cli.py`
-* **인증 정보**: `~/.hermes/.env` 파일의 `WORDPRESS_ACCESS_TOKEN` 및 `WORDPRESS_SITE_ID` 사용
+* **인증 정보**: `~/.hermes/.env` 파일의 `WORDPRESS_ACCESS_TOKEN`, `WORDPRESS_CLIENT_ID`, `WORDPRESS_CLIENT_SECRET`, `WORDPRESS_REDIRECT_URI` 사용
+
+---
+
+## 1.1 토큰 만료 시 재인증 및 갱신 프로세스
+
+API 호출 중 `invalid_token` (토큰 만료 또는 오류)이 발생하면 즉시 사용자에게 아래 재인증 링크를 제시하고, 사용자가 전달한 `code` 값으로 토큰을 자동 교환함:
+
+1. **사용자 재인증 링크**:
+   [https://public-api.wordpress.com/oauth2/authorize?client_id=144537&redirect_uri=https://steelcup.home.blog/&response_type=code](https://public-api.wordpress.com/oauth2/authorize?client_id=144537&redirect_uri=https://steelcup.home.blog/&response_type=code)
+2. **토큰 자동 교환 명령**:
+   ```bash
+   python3 ~/Projects/antigravity-wordpress-plugin/scripts/wp_cli.py token --code <AUTHORIZATION_CODE>
+   ```
 
 ---
 
